@@ -56,10 +56,6 @@ class App(ctk.CTk):
         # list for storing random values of Data class to be sorted
         self.data = []
 
-        # flag for ongoing sorting
-        self.sorting_flag = False
-        self.timer = None
-
         # ---------- INTERFACE ----------
         self.interface_frame = ctk.CTkFrame(self, corner_radius=0)
         self.interface_frame.grid(row=0, column=0, sticky="nsew")
@@ -82,8 +78,6 @@ class App(ctk.CTk):
         self.generate_button.grid(row=1, column=0, padx=20, pady=10)
         self.sort_button = ctk.CTkButton(self.buttons_frame, border_spacing=5, corner_radius=20, text="SORT", command=self.sorting, font=ctk.CTkFont(size=20, weight="bold"))
         self.sort_button.grid(row=2, column=0, padx=20, pady=10)
-        self.pause_button = ctk.CTkButton(self.buttons_frame, border_spacing=5, corner_radius=20, text="PAUSE", command=self.pause, font=ctk.CTkFont(size=20, weight="bold"))
-        self.pause_button.grid(row=3, column=0, padx=20, pady=10)
 
         # algorithm modes radiobutton
         self.algorithm_type = tk.StringVar()
@@ -122,7 +116,6 @@ class App(ctk.CTk):
         self.bubble_radiobtn.select() # select defalut algorithm - Bubble
         self.normal_radiobtn.select() # select default speed - Normal
         self.sort_button.configure(state="disabled")
-        self.pause_button.configure(state="disabled")
 
     def change_appearance_mode(self, new_appearance_mode: str):
         ctk.set_appearance_mode(new_appearance_mode)
@@ -159,10 +152,8 @@ class App(ctk.CTk):
 
     # sort the data
     def sorting(self):
-        self.sorting_flag = True
         self.generate_button.configure(state="disabled")
         self.sort_button.configure(state="disabled")
-        self.pause_button.configure(state="normal")
         algorithm_type = self.algorithm_type.get()
 
         if algorithm_type == 'Bubble':
@@ -172,32 +163,19 @@ class App(ctk.CTk):
 
         self.generate_button.configure(state="normal")
         self.sort_button.configure(state="disabled")
-        self.pause_button.configure(state="disabled")
-        self.sorting_flag = False
-
-    def pause(self):
-        timer_id, sort_function, i = self.timer
-        if self.pause_button['text'] == "PAUSE":
-            self.after_cancel(timer_id)
-            self.pause_button.config(text="UNPAUSE")
-        else:
-            self.pause_button.config(text="PAUSE")
-            sort_function(i) # start the function again
 
     # bubble sort
     def bubble(self, i=0):
         time_sleep = self.speed_mode.get()
         size = len(self.data)
 
-        if i < len(self.data):
-            for i in range(size-1):
-                for j in range(size-i-1):
-                    if self.data[j].value > self.data[j+1].value:
-                        self.data[j], self.data[j+1] = self.data[j+1], self.data[j]
-                        self.visualise()
-                        time.sleep(time_sleep)
-                self.timer = self.after(10, self.bubble, i+1), self.bubble, i
-            self.visualise()
+        for i in range(size-1):
+            for j in range(size-i-1):
+                if self.data[j].value > self.data[j+1].value:
+                    self.data[j], self.data[j+1] = self.data[j+1], self.data[j]
+                    self.visualise()
+                    time.sleep(time_sleep)
+        self.visualise()
 
 
     # merge sort
