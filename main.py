@@ -2,6 +2,7 @@ import tkinter as tk
 import customtkinter as ctk
 import random
 import time
+from copy import deepcopy
 
 # colors
 DARK_BLUE_GRAY = '#52527a'
@@ -9,10 +10,15 @@ LIGHT_BLUE_GRAY = '#8585ad'
 MILD_GREEN = '#4dff4d'
 RED = '#ff0000'
 BARS_COLOR = MILD_GREEN
+
+# bars
+MAX_VALUE = 200
+BARS_AMOUNT = 100
+
 # speed modes
 SLOW = 0.05
-NORMAL = 0.01
-FAST = 0.001
+NORMAL = 0.005
+FAST = 0
 
 def hex_to_rgb(value):
     value = value.lstrip('#')
@@ -33,10 +39,10 @@ def rgb_to_hex(rgb):
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("green")
 
-# class Data:
-#     def __init__(self, value, color):
-#         self.value = value
-#         self.color = color
+class Data:
+    def __init__(self, value, color):
+        self.value = value
+        self.color = color
 
 class App(ctk.CTk):
     def __init__(self):
@@ -49,6 +55,10 @@ class App(ctk.CTk):
 
         # list for storing random values of Data class to be sorted
         self.data = []
+
+        # flag for ongoing sorting
+        self.sorting_flag = False
+        self.timer = None
 
         # ---------- INTERFACE ----------
         self.interface_frame = ctk.CTkFrame(self, corner_radius=0)
@@ -68,13 +78,15 @@ class App(ctk.CTk):
         self.buttons_frame.grid(row=0, column=0, sticky="nsew")
         self.logo_label = ctk.CTkLabel(self.buttons_frame, text="Menu", font=ctk.CTkFont(size=30, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
-        self.sidebar_button_1 = ctk.CTkButton(self.buttons_frame, border_spacing=5, corner_radius=20, text="GENERATE", command=self.generate, font=ctk.CTkFont(size=20, weight="bold"))
-        self.sidebar_button_1.grid(row=1, column=0, padx=20, pady=10)
-        self.sidebar_button_2 = ctk.CTkButton(self.buttons_frame, border_spacing=5, corner_radius=20, text="SORT", command=self.sorting, font=ctk.CTkFont(size=20, weight="bold"))
-        self.sidebar_button_2.grid(row=2, column=0, padx=20, pady=10)
+        self.generate_button = ctk.CTkButton(self.buttons_frame, border_spacing=5, corner_radius=20, text="GENERATE", command=self.generate, font=ctk.CTkFont(size=20, weight="bold"))
+        self.generate_button.grid(row=1, column=0, padx=20, pady=10)
+        self.sort_button = ctk.CTkButton(self.buttons_frame, border_spacing=5, corner_radius=20, text="SORT", command=self.sorting, font=ctk.CTkFont(size=20, weight="bold"))
+        self.sort_button.grid(row=2, column=0, padx=20, pady=10)
+        self.pause_button = ctk.CTkButton(self.buttons_frame, border_spacing=5, corner_radius=20, text="PAUSE", command=self.pause, font=ctk.CTkFont(size=20, weight="bold"))
+        self.pause_button.grid(row=3, column=0, padx=20, pady=10)
 
         # algorithm modes radiobutton
-        self.algorithm_type = tk.StringVar(value="Bubble")
+        self.algorithm_type = tk.StringVar()
         self.algorithm_radiobtn_frame = ctk.CTkFrame(self.menu_frame)
         self.algorithm_radiobtn_frame.grid(row=1, column=0, padx=(20, 20), pady=(20, 0), sticky="nsew")
         self.algorithm_radiobtn_group = ctk.CTkLabel(master=self.algorithm_radiobtn_frame, text="SORTING ALGORITHM")
@@ -89,7 +101,7 @@ class App(ctk.CTk):
         self.insertion_radiobtn.grid(row=4, column=0, pady=5, padx=10, sticky='n')
 
         # speed modes radiobutton
-        self.speed_mode = tk.DoubleVar(value=NORMAL)
+        self.speed_mode = tk.DoubleVar()
         self.speed_radiobtn_frame = ctk.CTkFrame(self.menu_frame)
         self.speed_radiobtn_frame.grid(row=2, column=0, padx=(15, 15), pady=(15, 0), sticky="nsew")
         self.speed_radiobtn_group = ctk.CTkLabel(master=self.speed_radiobtn_frame, text="VISUALIZATION SPEED")
@@ -101,24 +113,33 @@ class App(ctk.CTk):
         self.fast_radiobtn = ctk.CTkRadioButton(master=self.speed_radiobtn_frame, text="Fast", variable=self.speed_mode, value=FAST)
         self.fast_radiobtn.grid(row=3, column=0, pady=5, padx=10, sticky='n')
 
+        self.appearance_mode_label = ctk.CTkLabel(self.menu_frame, text="APPEARENCE MODE", anchor="w")
+        self.appearance_mode_label.grid(row=5, column=0, padx=20, pady=(10, 0))
+        self.appearance_mode_optionemenu = ctk.CTkOptionMenu(self.menu_frame, values=["Dark", "Light"], command=self.change_appearance_mode)
+        self.appearance_mode_optionemenu.grid(row=6, column=0, padx=20, pady=(10, 10))
+
+        # set default values
+        self.bubble_radiobtn.select() # select defalut algorithm - Bubble
+        self.normal_radiobtn.select() # select default speed - Normal
+        self.sort_button.configure(state="disabled")
+        self.pause_button.configure(state="disabled")
+
+    def change_appearance_mode(self, new_appearance_mode: str):
+        ctk.set_appearance_mode(new_appearance_mode)
+
     # generate random data
     def generate(self):
-        # self.data = [[random.randint(1, 200), BARS_COLOR] for _ in range(100)]
-        self.data = [random.randint(1, 200) for _ in range(100)]
-        self.colors = [BARS_COLOR for _ in range(len(self.data))]
-        self.visualise(sort_flag=False)
+        self.data = [Data(random.randint(1, MAX_VALUE), BARS_COLOR) for _ in range(100)]
+        self.visualise()
+        self.sort_button.configure(state="normal")
 
     # draw data as vertical bars
-    def visualise(self, sort_flag):
+    def visualise(self):
         self.canvas.delete("all")
         x_width = self.canvas_width / (len(self.data)+1)
         offset = 5
-        # if sort_flag:
-        #     data_norm = self.data   # TODO - niech może przechowuje tuple typu [data value, color]
-        # else:
-        #     data_norm = [x / max(self.data) for x in self.data]
 
-        data_norm = [x / max(self.data) for x in self.data]
+        data_norm = [x.value / MAX_VALUE for x in self.data]
 
         for i, height in enumerate(data_norm):
             x0 = i * x_width + offset
@@ -127,7 +148,7 @@ class App(ctk.CTk):
             y1 = self.canvas_height
 
             # convert hex color to rgb to change brightness depending on height
-            color_rgb = hex_to_rgb(self.colors[i])
+            color_rgb = hex_to_rgb(self.data[i].color)
             new_rgb_color = change_rgb_brightness(color_rgb, height)
             new_color = rgb_to_hex(new_rgb_color)
 
@@ -138,6 +159,10 @@ class App(ctk.CTk):
 
     # sort the data
     def sorting(self):
+        self.sorting_flag = True
+        self.generate_button.configure(state="disabled")
+        self.sort_button.configure(state="disabled")
+        self.pause_button.configure(state="normal")
         algorithm_type = self.algorithm_type.get()
 
         if algorithm_type == 'Bubble':
@@ -145,51 +170,72 @@ class App(ctk.CTk):
         elif algorithm_type == 'Merge':
             self.merge(0, len(self.data)-1)
 
+        self.generate_button.configure(state="normal")
+        self.sort_button.configure(state="disabled")
+        self.pause_button.configure(state="disabled")
+        self.sorting_flag = False
+
+    def pause(self):
+        timer_id, sort_function, i = self.timer
+        if self.pause_button['text'] == "PAUSE":
+            self.after_cancel(timer_id)
+            self.pause_button.config(text="UNPAUSE")
+        else:
+            self.pause_button.config(text="PAUSE")
+            sort_function(i) # start the function again
+
     # bubble sort
-    def bubble(self):
+    def bubble(self, i=0):
         time_sleep = self.speed_mode.get()
         size = len(self.data)
-        for i in range(size-1):
-            for j in range(size-i-1):
-                if self.data[j] > self.data[j+1]:
-                    self.data[j], self.data[j+1] = self.data[j+1], self.data[j]
-                    self.visualise(sort_flag=True)
-                    time.sleep(time_sleep)
-        self.visualise(sort_flag=True)
+
+        if i < len(self.data):
+            for i in range(size-1):
+                for j in range(size-i-1):
+                    if self.data[j].value > self.data[j+1].value:
+                        self.data[j], self.data[j+1] = self.data[j+1], self.data[j]
+                        self.visualise()
+                        time.sleep(time_sleep)
+                self.timer = self.after(10, self.bubble, i+1), self.bubble, i
+            self.visualise()
+
 
     # merge sort
-    def mrg(self, start, mid, end):
-        p, q = start, mid+1
-        temp = []
-        for i in range(start, end+1):
-            if p > mid:
-                temp.append(self.data[q])
-                q += 1
-            elif q > end:
-                temp.append(self.data[p])
-            elif self.data[p] < self.data[q]:
-                temp.append(self.data[p])
-                p += 1
+    def mrg(self, left, mid, right):
+        i, j, temp = left, mid+1, []
+        while i <= mid and j <= right:
+            if self.data[i].value <= self.data[j].value:
+                temp.append(self.data[i])
+                i += 1
             else:
-                temp.append(self.data[q])
-                q += 1
+                temp.append(self.data[j])
+                j += 1
 
-        for i in range(len(temp)):
-            self.data[start] = temp[i]
-            start += 1
+        while i <= mid:
+            temp.append(self.data[i])
+            i += 1
 
-    def merge(self, start, end):
-        if start < end:
-            time_sleep = self.speed_mode.get()
-            mid = (start + end) // 2
-            self.merge(start, mid)
-            self.merge(mid+1, end)
+        while j <= right:
+            temp.append(self.data[j])
+            j += 1
 
-            self.mrg(start, mid, end)
-            self.visualise(sort_flag=True)
+        i, k = 0, right-left+1
+        while i < k:
+            self.data[left+i] = temp[i]
+            i += 1
+
+    def merge(self, left, right):
+        time_sleep = self.speed_mode.get()
+        if left < right:
+            mid = (left + right) // 2
+            self.merge(left, mid)
+            self.merge(mid+1, right)
+
+            self.mrg(left, mid, right)
+            self.visualise()
             time.sleep(time_sleep)
 
-        self.visualise(sort_flag=True)
+        self.visualise()
 
 if __name__ == "__main__":
     app = App()
