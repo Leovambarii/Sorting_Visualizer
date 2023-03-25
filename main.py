@@ -8,6 +8,8 @@ DARK_BLUE_GRAY = '#52527a'
 LIGHT_BLUE_GRAY = '#8585ad'
 MILD_GREEN = '#4dff4d'
 RED = '#ff0000'
+YELLOW = '#ffff00'
+ORANGE = '#ff9900'
 BARS_COLOR = MILD_GREEN
 
 # bars
@@ -15,7 +17,8 @@ MAX_VALUE = 200
 BARS_AMOUNT = 100
 
 # speed modes
-SLOW = 0.05
+# SLOW = 0.05
+SLOW = 0.1
 NORMAL = 0.01
 FAST = 0
 
@@ -47,6 +50,7 @@ class Data:
     def __init__(self, value, color):
         self.value = value
         self.color = color
+        self.temp_color = None
 
 # Main class
 class App(ctk.CTk):
@@ -154,7 +158,13 @@ class App(ctk.CTk):
                 self.data[i].color = new_color
 
             # drawing vertical bar
+            # first initial color upon generation
                 self.canvas.create_rectangle(x0, y0, x1, y1, fill=new_color)
+            # checking whether there is assigned temporary color
+            elif self.data[i].temp_color:
+                self.canvas.create_rectangle(x0, y0, x1, y1, fill=self.data[i].temp_color)
+                self.data[i].temp_color = None
+            # drawing assigned color in data class
             else:
                 self.canvas.create_rectangle(x0, y0, x1, y1, fill=self.data[i].color)
 
@@ -186,6 +196,10 @@ class App(ctk.CTk):
             for j in range(size-i-1):
                 if self.data[j].value > self.data[j+1].value:
                     self.data[j], self.data[j+1] = self.data[j+1], self.data[j]
+                    # assigning temporal colors
+                    self.data[j].temp_color = RED
+                    self.data[j+1].temp_color = YELLOW
+
                     self.visualise()
                     time.sleep(time_sleep)
         self.visualise()
@@ -218,7 +232,16 @@ class App(ctk.CTk):
             mid = (left + right) // 2
             self.merge(left, mid)
             self.merge(mid+1, right)
+
             self.mrg(left, mid, right)
+            for i, x in enumerate(self.data):
+                if i >= left and i < mid:
+                    x.temp_color = YELLOW
+                elif i == mid:
+                    x.temp_color = RED
+                elif i > mid and i <= right:
+                    x.temp_color = ORANGE
+
             self.visualise()
             time.sleep(time_sleep)
         self.visualise()
