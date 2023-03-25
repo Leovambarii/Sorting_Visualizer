@@ -171,6 +171,8 @@ class App(ctk.CTk):
             self.bubble()
         elif algorithm_type == 'Merge':
             self.merge(0, len(self.data)-1)
+        elif algorithm_type == 'Quick':
+            self.quick(0, len(self.data)-1)
 
         self.generate_button.configure(state="normal")
         self.sort_button.configure(state="disabled")
@@ -219,6 +221,28 @@ class App(ctk.CTk):
             self.mrg(left, mid, right)
             self.visualise()
             time.sleep(time_sleep)
+        self.visualise()
+
+    # quick sort
+    def quick(self, left, right):
+        time_sleep = self.speed_mode.get()
+        i, j = left, right
+        pivot = self.data[(left + right) // 2].value
+        while i <= j:
+            while self.data[i].value < pivot:
+                i += 1
+            while self.data[j].value > pivot:
+                j -= 1
+            if i <= j:
+                self.data[i], self.data[j] = self.data[j], self.data[i]
+                i += 1
+                j -= 1
+                self.visualise()
+                time.sleep(time_sleep)
+        if j > left:
+            self.quick(left, j)
+        if i < right:
+            self.quick(i, right)
         self.visualise()
 
 # Main loop
