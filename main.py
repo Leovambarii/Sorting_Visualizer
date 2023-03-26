@@ -147,6 +147,7 @@ class App(ctk.CTk):
         algorithm_type = self.algorithm_type.get()
         time_sleep = self.speed_mode.get()
 
+
         if algorithm_type == 'Bubble':
             self.bubble(time_sleep)
         elif algorithm_type == 'Merge':
@@ -181,7 +182,7 @@ class App(ctk.CTk):
         self.visualise()
 
     # function for merging
-    def mrg(self, left, mid, right):
+    def mrg(self, left, mid, right, time_sleep):
         i, j, temp = left, mid+1, []
         while (i <= mid and j <= right):
             if self.data[i].value <= self.data[j].value:
@@ -200,6 +201,15 @@ class App(ctk.CTk):
         while (i < k):
             self.data[left+i] = temp[i]
             i += 1
+        for i, x in enumerate(self.data):
+            if i >= left and i < mid:
+                x.temp_color = YELLOW
+            elif i == mid:
+                x.temp_color = RED
+            elif i > mid and i <= right:
+                x.temp_color = ORANGE
+        self.visualise()
+        time.sleep(time_sleep+0.1)
 
     # merge sort
     def merge(self, left, right, time_sleep):
@@ -207,16 +217,7 @@ class App(ctk.CTk):
             mid = (left + right) // 2
             self.merge(left, mid, time_sleep)
             self.merge(mid+1, right, time_sleep)
-            self.mrg(left, mid, right)
-            for i, x in enumerate(self.data):
-                if i >= left and i < mid:
-                    x.temp_color = YELLOW
-                elif i == mid:
-                    x.temp_color = RED
-                elif i > mid and i <= right:
-                    x.temp_color = ORANGE
-            self.visualise()
-            time.sleep(time_sleep*5)
+            self.mrg(left, mid, right, time_sleep)
         self.visualise()
 
     # quick sort
@@ -244,6 +245,7 @@ class App(ctk.CTk):
             self.quick(i, right, time_sleep)
         self.visualise()
 
+    # insertion sort
     def insertion(self, left, right, time_sleep):
         for i in range(left + 1, right + 1):
             j = i
@@ -298,16 +300,7 @@ class App(ctk.CTk):
                 mid = min(n-1, left+size-1)
                 right = min((left+2*size-1), n-1)
                 if mid < right:
-                    self.mrg(left, mid, right)
-                    for i, x in enumerate(self.data):
-                        if i >= left and i < mid:
-                            x.temp_color = YELLOW
-                        elif i == mid:
-                            x.temp_color = RED
-                        elif i > mid and i <= right:
-                            x.temp_color = ORANGE
-                    self.visualise()
-                    time.sleep(time_sleep*5)
+                    self.mrg(left, mid, right, time_sleep)
             size = 2*size
         self.visualise()
 
