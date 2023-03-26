@@ -50,7 +50,7 @@ class App(ctk.CTk):
         self.algorithm_frame.grid(row=1, column=0, padx=15, pady=(10, 0), sticky="nsew")
         self.algorithm_mode_label = ctk.CTkLabel(self.algorithm_frame, text="SORTING ALGORITHM", anchor="center", font=ctk.CTkFont(weight="bold"))
         self.algorithm_mode_label.grid(row=0, column=0, padx=(30, 0), pady=(10, 0), sticky="nsew")
-        self.algorithm_mode_optionemenu = ctk.CTkOptionMenu(self.algorithm_frame, values=["Bubble", "Merge", "Quick"], variable=self.algorithm_type)
+        self.algorithm_mode_optionemenu = ctk.CTkOptionMenu(self.algorithm_frame, variable=self.algorithm_type)
         self.algorithm_mode_optionemenu.grid(row=1, column=0, padx=(30, 0), pady=(10, 10), sticky="nsew")
 
         # amout of bars segmented button
@@ -84,6 +84,7 @@ class App(ctk.CTk):
         self.appearance_mode_optionemenu.grid(row=1, column=0, padx=(40, 0), pady=(10, 10), sticky="nsew")
 
         # set default values
+        self.algorithm_mode_optionemenu.configure(values=["Bubble", "Merge", "Quick", "Insertion", "Shell", "Tim"])
         self.algorithm_mode_optionemenu.set('Merge') # select default algorithm - Merge
         self.normal_radiobtn.select() # select default speed - Normal
         self.seg_button_bars.configure(values=[BARS_AMOUNT_SMALL, BARS_AMOUNT_INITIAL, BARS_AMOUNT_HIGH, BAR_AMOUNT_MOST])
@@ -144,12 +145,20 @@ class App(ctk.CTk):
         self.algorithm_mode_optionemenu.configure(state='disabled')
 
         algorithm_type = self.algorithm_type.get()
+        time_sleep = self.speed_mode.get()
+
         if algorithm_type == 'Bubble':
-            self.bubble()
+            self.bubble(time_sleep)
         elif algorithm_type == 'Merge':
-            self.merge(0, len(self.data)-1)
+            self.merge(0, len(self.data)-1, time_sleep)
         elif algorithm_type == 'Quick':
-            self.quick(0, len(self.data)-1)
+            self.quick(0, len(self.data)-1, time_sleep)
+        elif algorithm_type == 'Insertion':
+            self.insertion(0, len(self.data)-1, time_sleep)
+        elif algorithm_type == 'Shell':
+            self.shell(time_sleep)
+        elif algorithm_type == 'Tim':
+            self.tim(time_sleep)
 
         # enabling buttons
         self.generate_button.configure(state="normal")
@@ -159,8 +168,7 @@ class App(ctk.CTk):
 
     # ---------- SORTING ALGORITHMS ----------
     # bubble sort
-    def bubble(self):
-        time_sleep = self.speed_mode.get()
+    def bubble(self, time_sleep):
         size = len(self.data)
         for i in range(size-1):
             for j in range(size-i-1):
@@ -172,34 +180,33 @@ class App(ctk.CTk):
                     time.sleep(time_sleep)
         self.visualise()
 
-    # merge sort
+    # function for merging
     def mrg(self, left, mid, right):
         i, j, temp = left, mid+1, []
-        while i <= mid and j <= right:
+        while (i <= mid and j <= right):
             if self.data[i].value <= self.data[j].value:
                 temp.append(self.data[i])
                 i += 1
             else:
                 temp.append(self.data[j])
                 j += 1
-        while i <= mid:
+        while (i <= mid):
             temp.append(self.data[i])
             i += 1
-        while j <= right:
+        while (j <= right):
             temp.append(self.data[j])
             j += 1
         i, k = 0, right-left+1
-        while i < k:
+        while (i < k):
             self.data[left+i] = temp[i]
             i += 1
 
-    def merge(self, left, right):
-        time_sleep = self.speed_mode.get()
+    # merge sort
+    def merge(self, left, right, time_sleep):
         if left < right:
             mid = (left + right) // 2
-            self.merge(left, mid)
-            self.merge(mid+1, right)
-
+            self.merge(left, mid, time_sleep)
+            self.merge(mid+1, right, time_sleep)
             self.mrg(left, mid, right)
             for i, x in enumerate(self.data):
                 if i >= left and i < mid:
@@ -208,21 +215,19 @@ class App(ctk.CTk):
                     x.temp_color = RED
                 elif i > mid and i <= right:
                     x.temp_color = ORANGE
-
             self.visualise()
-            time.sleep(time_sleep)
+            time.sleep(time_sleep*5)
         self.visualise()
 
     # quick sort
-    def quick(self, left, right):
-        time_sleep = self.speed_mode.get()
+    def quick(self, left, right, time_sleep):
         i, j = left, right
         p = (left + right) // 2
         pivot = self.data[p].value
-        while i <= j:
-            while self.data[i].value < pivot:
+        while (i <= j):
+            while (self.data[i].value < pivot):
                 i += 1
-            while self.data[j].value > pivot:
+            while (self.data[j].value > pivot):
                 j -= 1
             if i <= j:
                 self.data[i], self.data[j] = self.data[j], self.data[i]
@@ -234,9 +239,76 @@ class App(ctk.CTk):
                 self.visualise()
                 time.sleep(time_sleep)
         if j > left:
-            self.quick(left, j)
+            self.quick(left, j, time_sleep)
         if i < right:
-            self.quick(i, right)
+            self.quick(i, right, time_sleep)
+        self.visualise()
+
+    def insertion(self, left, right, time_sleep):
+        for i in range(left + 1, right + 1):
+            j = i
+            while j > left and self.data[j].value < self.data[j-1].value:
+                self.data[j].temp_color = RED
+                self.data[j-1].temp_color = YELLOW
+                self.visualise()
+                self.data[j], self.data[j-1] = self.data[j-1], self.data[j]
+                j -= 1
+                time.sleep(time_sleep)
+            self.visualise()
+
+    # shell sort
+    def shell(self, time_sleep):
+        n = len(self.data)
+        gap = n // 2
+        while (gap > 0):
+            j = gap
+            while (j < n):
+                i = j - gap
+                while (i >= 0):
+                    if self.data[i+gap].value > self.data[i].value:
+                        break
+                    self.data[i+gap], self.data[i] = self.data[i], self.data[i+gap]
+                    self.data[i+gap].temp_color = RED
+                    self.data[i].temp_color = YELLOW
+                    self.visualise()
+                    i = i - gap
+                    time.sleep(time_sleep)
+                j += 1
+            gap = gap // 2
+        self.visualise()
+
+    # functions for tim sort algorithm
+    def minRun(self, n):
+        r = 0
+        while (n >= 32):
+            r |= n & 1
+            n >>= 1
+        return n + r
+
+    # tim sort
+    def tim(self, time_sleep):
+        n = len(self.data)
+        run = self.minRun(n)
+        for left in range(0, n, run):
+            right = min(left+run-1, n-1)
+            self.insertion(left, right, time_sleep)
+        size = run
+        while (size < n):
+            for left in range(0, n, 2*size):
+                mid = min(n-1, left+size-1)
+                right = min((left+2*size-1), n-1)
+                if mid < right:
+                    self.mrg(left, mid, right)
+                    for i, x in enumerate(self.data):
+                        if i >= left and i < mid:
+                            x.temp_color = YELLOW
+                        elif i == mid:
+                            x.temp_color = RED
+                        elif i > mid and i <= right:
+                            x.temp_color = ORANGE
+                    self.visualise()
+                    time.sleep(time_sleep*5)
+            size = 2*size
         self.visualise()
 
 # Main loop
