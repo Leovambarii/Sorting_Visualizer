@@ -84,7 +84,7 @@ class App(ctk.CTk):
         self.appearance_mode_optionemenu.grid(row=1, column=0, padx=(40, 0), pady=(10, 10), sticky="nsew")
 
         # set default values
-        self.algorithm_mode_optionemenu.configure(values=["Bubble", "Merge", "Quick", "Insertion", "Shell", "Tim", "Selection", "Pigeonhole", "Coctail", "Comb"])
+        self.algorithm_mode_optionemenu.configure(values=["Bubble", "Merge", "Quick", "Insertion", "Shell", "Tim", "Selection", "Pigeonhole", "Coctail", "Comb", "Gnome", "Cycle", "Heap"])
         self.algorithm_mode_optionemenu.set('Merge') # select default algorithm - Merge
         self.normal_radiobtn.select() # select default speed - Normal
         self.seg_button_bars.configure(values=[BARS_AMOUNT_SMALL, BARS_AMOUNT_INITIAL, BARS_AMOUNT_HIGH, BAR_AMOUNT_MOST])
@@ -147,7 +147,6 @@ class App(ctk.CTk):
         algorithm_type = self.algorithm_type.get()
         time_sleep = self.speed_mode.get()
 
-
         if algorithm_type == 'Bubble':
             self.bubble(time_sleep)
         elif algorithm_type == 'Merge':
@@ -168,6 +167,12 @@ class App(ctk.CTk):
             self.coctail(time_sleep)
         elif algorithm_type == 'Comb':
             self.comb(time_sleep)
+        elif algorithm_type == 'Gnome':
+            self.gnome(time_sleep)
+        elif algorithm_type == 'Cycle':
+            self.cycle(time_sleep)
+        elif algorithm_type == 'Heap':
+            self.heap(time_sleep)
 
         # enabling buttons
         self.generate_button.configure(state="normal")
@@ -179,6 +184,7 @@ class App(ctk.CTk):
     # bubble sort
     def bubble(self, time_sleep):
         size = len(self.data)
+
         for i in range(size-1):
             for j in range(size-i-1):
                 if self.data[j].value > self.data[j+1].value:
@@ -195,20 +201,26 @@ class App(ctk.CTk):
     # function for merging
     def mrg(self, left, mid, right, time_sleep):
         i, j, temp = left, mid+1, []
+
         while (i <= mid and j <= right):
             if self.data[i].value <= self.data[j].value:
                 temp.append(self.data[i])
                 i += 1
+
             else:
                 temp.append(self.data[j])
                 j += 1
+
         while (i <= mid):
             temp.append(self.data[i])
             i += 1
+
         while (j <= right):
             temp.append(self.data[j])
             j += 1
+
         i, k = 0, right-left+1
+
         while (i < k):
             self.data[left+i] = temp[i]
             i += 1
@@ -221,6 +233,7 @@ class App(ctk.CTk):
                 x.temp_color = RED
             elif i > mid and i <= right:
                 x.temp_color = ORANGE
+
         self.visualise()
         time.sleep(time_sleep+0.1)
 
@@ -231,6 +244,7 @@ class App(ctk.CTk):
             self.merge(left, mid, time_sleep)
             self.merge(mid+1, right, time_sleep)
             self.mrg(left, mid, right, time_sleep)
+
         self.visualise()
 
     # quick sort
@@ -238,11 +252,14 @@ class App(ctk.CTk):
         i, j = left, right
         p = (left + right) // 2
         pivot = self.data[p].value
+
         while (i <= j):
             while (self.data[i].value < pivot):
                 i += 1
+
             while (self.data[j].value > pivot):
                 j -= 1
+
             if i <= j:
                 self.data[i], self.data[j] = self.data[j], self.data[i]
                 i += 1
@@ -257,14 +274,17 @@ class App(ctk.CTk):
 
         if j > left:
             self.quick(left, j, time_sleep)
+
         if i < right:
             self.quick(i, right, time_sleep)
+
         self.visualise()
 
     # insertion sort
     def insertion(self, left, right, time_sleep):
         for i in range(left + 1, right + 1):
             j = i
+
             while j > left and self.data[j].value < self.data[j-1].value:
                 # visualisation
                 self.data[j].temp_color = RED
@@ -274,16 +294,20 @@ class App(ctk.CTk):
 
                 self.data[j], self.data[j-1] = self.data[j-1], self.data[j]
                 j -= 1
+
             self.visualise()
 
     # shell sort
     def shell(self, time_sleep):
         n = len(self.data)
         gap = n // 2
+
         while (gap > 0):
             j = gap
+
             while (j < n):
                 i = j - gap
+
                 while (i >= 0):
                     if self.data[i+gap].value > self.data[i].value:
                         break
@@ -296,8 +320,11 @@ class App(ctk.CTk):
                     time.sleep(time_sleep)
 
                     i = i - gap
+
                 j += 1
+
             gap = gap // 2
+
         self.visualise()
 
     # functions for tim sort algorithm
@@ -312,23 +339,29 @@ class App(ctk.CTk):
     def tim(self, time_sleep):
         n = len(self.data)
         run = self.minRun(n)
+
         for left in range(0, n, run):
             right = min(left+run-1, n-1)
             self.insertion(left, right, time_sleep)
+
         size = run
+
         while (size < n):
             for left in range(0, n, 2*size):
                 mid = min(n-1, left+size-1)
                 right = min((left+2*size-1), n-1)
                 if mid < right:
                     self.mrg(left, mid, right, time_sleep)
+
             size = 2*size
+
         self.visualise()
 
     # selection sort
     def selection(self, time_sleep):
         for i in range(len(self.data)):
             minimum_idx = i
+
             for j in range(i+1, len(self.data)):
                 if self.data[minimum_idx].value > self.data[j].value:
                     minimum_idx = j
@@ -340,6 +373,7 @@ class App(ctk.CTk):
                 time.sleep(time_sleep)
 
             self.data[i], self.data[minimum_idx] = self.data[minimum_idx], self.data[i]
+
         self.visualise()
 
     # pigeonhole sort
@@ -348,9 +382,12 @@ class App(ctk.CTk):
         max_val = max(self.data, key=lambda x: x.value).value
         size = max_val - min_val + 1
         holes = [0]*size
+
         for x in self.data:
             holes[x.value-min_val] += 1
+
         i = 0
+
         for count in range(size):
             while (holes[count] > 0):
                 holes[count] -= 1
@@ -363,6 +400,7 @@ class App(ctk.CTk):
                 time.sleep(time_sleep)
 
                 i += 1
+
         self.visualise()
 
     # coctail sort
@@ -370,8 +408,10 @@ class App(ctk.CTk):
         n = len(self.data)
         swapped = True
         left, right = 0, n-1
+
         while (swapped == True):
             swapped = False
+
             for i in range(left, right):
                 if self.data[i].value > self.data[i+1].value:
                     self.data[i], self.data[i+1] = self.data[i+1], self.data[i]
@@ -385,8 +425,10 @@ class App(ctk.CTk):
 
             if swapped == False:
                 break
+
             swapped = False
             right -= 1
+
             for i in range(right-1, left-1, -1):
                 if self.data[i].value > self.data[i+1].value:
                     self.data[i], self.data[i+1] = self.data[i+1], self.data[i]
@@ -399,6 +441,7 @@ class App(ctk.CTk):
                     time.sleep(time_sleep)
 
             left += 1
+
         self.visualise()
 
     # function for finding next gap in comb sort
@@ -411,9 +454,11 @@ class App(ctk.CTk):
         n = len(self.data)
         gap = n
         swapped = True
+
         while ((gap != 1) or (swapped == True)):
             gap = self.nextGap(gap)
             swapped = False
+
             for i in range(n-gap):
                 if self.data[i].value > self.data[i+gap].value:
                     self.data[i], self.data[i+gap] = self.data[i+gap], self.data[i]
@@ -427,13 +472,129 @@ class App(ctk.CTk):
 
         self.visualise()
 
-    # bucket sort # TODO DOKONCZYC
-    def bucket(self, time_sleep):
-        slot_num = 10
-        arr = [[] for _ in range(slot_num)]
-        for x in self.data:
-            idx_b = int(slot_num * x.value)
-            arr[idx_b].append(x)
+    # gnome sort
+    def gnome(self, time_sleep):
+        idx = 0
+
+        while (idx < len(self.data)):
+            if idx == 0:
+                idx += 1
+                # visualisation
+                self.data[idx].temp_color = YELLOW
+                self.visualise()
+
+            if self.data[idx].value >= self.data[idx-1].value:
+                # visualisation
+                self.data[idx].temp_color = YELLOW
+                self.visualise()
+
+                idx += 1
+
+            else:
+                # visualisation
+                self.data[idx].temp_color = YELLOW
+                self.data[idx-1].temp_color = RED
+                self.visualise()
+                time.sleep(time_sleep)
+
+                self.data[idx], self.data[idx-1] = self.data[idx-1], self.data[idx]
+                idx -= 1
+
+        self.visualise()
+
+    # cycle sort
+    def cycle(self, time_sleep):
+        n = len(self.data)
+
+        for cycleStart in range(0, n-1):
+            item = self.data[cycleStart]
+            pos = cycleStart
+
+            for i in range(cycleStart, n):
+                if self.data[i].value < item.value:
+                    pos += 1
+
+            if pos == cycleStart:
+                continue
+
+            while (item.value == self.data[pos].value):
+                pos += 1
+                # visualisation
+                self.data[pos].temp_color = YELLOW
+                self.data[cycleStart].temp_color = RED
+                self.visualise()
+                time.sleep(time_sleep)
+
+            self.data[pos], item = item, self.data[pos]
+            # visualisation
+            self.data[pos].temp_color = ORANGE
+            self.data[cycleStart].temp_color = RED
+            self.visualise()
+            time.sleep(time_sleep)
+
+            while (pos != cycleStart):
+                pos = cycleStart
+
+                for i in range(cycleStart+1, n):
+                    if self.data[i].value < item.value:
+                        pos += 1
+                        # visualisation
+                        self.data[pos].temp_color = YELLOW
+                        self.data[cycleStart].temp_color = RED
+                        self.visualise()
+                        time.sleep(time_sleep)
+
+                while (item.value == self.data[pos].value):
+                    pos += 1
+                    # visualisation
+                    self.data[pos].temp_color = YELLOW
+                    self.data[cycleStart].temp_color = RED
+                    self.visualise()
+                    time.sleep(time_sleep)
+
+                self.data[pos], item = item, self.data[pos]
+                # visualisation
+                self.data[pos].temp_color = ORANGE
+                self.data[cycleStart].temp_color = RED
+                self.visualise()
+                time.sleep(time_sleep)
+
+        self.visualise()
+
+    # helper function for heap sort
+    def heapify(self, n, i):
+        largest = i
+        left = 2 * i + 1
+        right = 2 * i + 2
+
+        if left < n and self.data[largest].value < self.data[left].value:
+            largest = left
+
+        if right < n and self.data[largest].value < self.data[right].value:
+            largest = right
+
+        if largest != i:
+            self.data[i], self.data[largest] = self.data[largest], self.data[i]
+            self.heapify(n, largest)
+
+    # heap sort
+    def heap(self, time_sleep):
+        n = len(self.data)
+
+        for i in range(n//2-1, -1, -1):
+            self.heapify(n, i)
+            # visualisation
+            self.visualise()
+            time.sleep(time_sleep)
+
+        for i in range(n-1, 0, -1):
+            self.data[i], self.data[0] = self.data[0], self.data[i]
+            self.heapify(i, 0)
+            # visualisation
+            self.visualise()
+            time.sleep(time_sleep)
+
+        self.visualise()
 
 # Main loop
 if __name__ == "__main__":
