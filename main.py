@@ -84,7 +84,7 @@ class App(ctk.CTk):
         self.appearance_mode_optionemenu.grid(row=1, column=0, padx=(40, 0), pady=(10, 10), sticky="nsew")
 
         # set default values
-        self.algorithm_mode_optionemenu.configure(values=["Bubble", "Merge", "Quick", "Insertion", "Shell", "Tim"])
+        self.algorithm_mode_optionemenu.configure(values=["Bubble", "Merge", "Quick", "Insertion", "Shell", "Tim", "Selection", "Pigeonhole", "Coctail", "Comb"])
         self.algorithm_mode_optionemenu.set('Merge') # select default algorithm - Merge
         self.normal_radiobtn.select() # select default speed - Normal
         self.seg_button_bars.configure(values=[BARS_AMOUNT_SMALL, BARS_AMOUNT_INITIAL, BARS_AMOUNT_HIGH, BAR_AMOUNT_MOST])
@@ -160,6 +160,14 @@ class App(ctk.CTk):
             self.shell(time_sleep)
         elif algorithm_type == 'Tim':
             self.tim(time_sleep)
+        elif algorithm_type == 'Selection':
+            self.selection(time_sleep)
+        elif algorithm_type == 'Pigeonhole':
+            self.pigeonhole(time_sleep)
+        elif algorithm_type == 'Coctail':
+            self.coctail(time_sleep)
+        elif algorithm_type == 'Comb':
+            self.comb(time_sleep)
 
         # enabling buttons
         self.generate_button.configure(state="normal")
@@ -175,10 +183,13 @@ class App(ctk.CTk):
             for j in range(size-i-1):
                 if self.data[j].value > self.data[j+1].value:
                     self.data[j], self.data[j+1] = self.data[j+1], self.data[j]
+
+                    # visualisation
                     self.data[j].temp_color = RED
                     self.data[j+1].temp_color = YELLOW
                     self.visualise()
                     time.sleep(time_sleep)
+
         self.visualise()
 
     # function for merging
@@ -201,6 +212,8 @@ class App(ctk.CTk):
         while (i < k):
             self.data[left+i] = temp[i]
             i += 1
+
+        # visualisation
         for i, x in enumerate(self.data):
             if i >= left and i < mid:
                 x.temp_color = YELLOW
@@ -234,11 +247,14 @@ class App(ctk.CTk):
                 self.data[i], self.data[j] = self.data[j], self.data[i]
                 i += 1
                 j -= 1
+
+                # visualisation
                 self.data[i].temp_color = YELLOW
                 self.data[j].temp_color = ORANGE
                 self.data[p].temp_color = RED
                 self.visualise()
                 time.sleep(time_sleep)
+
         if j > left:
             self.quick(left, j, time_sleep)
         if i < right:
@@ -250,12 +266,14 @@ class App(ctk.CTk):
         for i in range(left + 1, right + 1):
             j = i
             while j > left and self.data[j].value < self.data[j-1].value:
+                # visualisation
                 self.data[j].temp_color = RED
                 self.data[j-1].temp_color = YELLOW
                 self.visualise()
+                time.sleep(time_sleep)
+
                 self.data[j], self.data[j-1] = self.data[j-1], self.data[j]
                 j -= 1
-                time.sleep(time_sleep)
             self.visualise()
 
     # shell sort
@@ -269,12 +287,15 @@ class App(ctk.CTk):
                 while (i >= 0):
                     if self.data[i+gap].value > self.data[i].value:
                         break
+
+                    # visualisation
                     self.data[i+gap], self.data[i] = self.data[i], self.data[i+gap]
                     self.data[i+gap].temp_color = RED
                     self.data[i].temp_color = YELLOW
                     self.visualise()
-                    i = i - gap
                     time.sleep(time_sleep)
+
+                    i = i - gap
                 j += 1
             gap = gap // 2
         self.visualise()
@@ -303,6 +324,116 @@ class App(ctk.CTk):
                     self.mrg(left, mid, right, time_sleep)
             size = 2*size
         self.visualise()
+
+    # selection sort
+    def selection(self, time_sleep):
+        for i in range(len(self.data)):
+            minimum_idx = i
+            for j in range(i+1, len(self.data)):
+                if self.data[minimum_idx].value > self.data[j].value:
+                    minimum_idx = j
+
+                # visualisation
+                self.data[minimum_idx].temp_color = YELLOW
+                self.data[j].temp_color = RED
+                self.visualise()
+                time.sleep(time_sleep)
+
+            self.data[i], self.data[minimum_idx] = self.data[minimum_idx], self.data[i]
+        self.visualise()
+
+    # pigeonhole sort
+    def pigeonhole(self, time_sleep):
+        min_val = min(self.data, key=lambda x: x.value).value
+        max_val = max(self.data, key=lambda x: x.value).value
+        size = max_val - min_val + 1
+        holes = [0]*size
+        for x in self.data:
+            holes[x.value-min_val] += 1
+        i = 0
+        for count in range(size):
+            while (holes[count] > 0):
+                holes[count] -= 1
+                self.data[i].value = count + min_val
+
+                # visualisation
+                self.data[i].color = rgb_to_hex(change_rgb_brightness(hex_to_rgb(BARS_COLOR), self.data[i].value / MAX_VALUE))  # correcting the color according to value
+                self.data[i].temp_color = RED
+                self.visualise()
+                time.sleep(time_sleep)
+
+                i += 1
+        self.visualise()
+
+    # coctail sort
+    def coctail(self, time_sleep):
+        n = len(self.data)
+        swapped = True
+        left, right = 0, n-1
+        while (swapped == True):
+            swapped = False
+            for i in range(left, right):
+                if self.data[i].value > self.data[i+1].value:
+                    self.data[i], self.data[i+1] = self.data[i+1], self.data[i]
+                    swapped = True
+
+                    # visualisation
+                    self.data[i].temp_color = RED
+                    self.data[i+1].temp_color = YELLOW
+                    self.visualise()
+                    time.sleep(time_sleep)
+
+            if swapped == False:
+                break
+            swapped = False
+            right -= 1
+            for i in range(right-1, left-1, -1):
+                if self.data[i].value > self.data[i+1].value:
+                    self.data[i], self.data[i+1] = self.data[i+1], self.data[i]
+                    swapped = True
+
+                    # visualisation
+                    self.data[i].temp_color = YELLOW
+                    self.data[i+1].temp_color = RED
+                    self.visualise()
+                    time.sleep(time_sleep)
+
+            left += 1
+        self.visualise()
+
+    # function for finding next gap in comb sort
+    def nextGap(self, gap):
+        gap = (gap * 10) // 13
+        return 1 if gap < 1 else gap
+
+    # comb sort
+    def comb(self, time_sleep):
+        n = len(self.data)
+        gap = n
+        swapped = True
+        while ((gap != 1) or (swapped == True)):
+            gap = self.nextGap(gap)
+            swapped = False
+            for i in range(n-gap):
+                if self.data[i].value > self.data[i+gap].value:
+                    self.data[i], self.data[i+gap] = self.data[i+gap], self.data[i]
+                    swapped = True
+
+                # visualisation
+                self.data[i].temp_color = RED
+                self.data[i+gap].temp_color = YELLOW
+                self.visualise()
+                time.sleep(time_sleep)
+
+        self.visualise()
+
+    # bucket sort # TODO DOKONCZYC
+    def bucket(self, time_sleep):
+        slot_num = 10
+        arr = [[] for _ in range(slot_num)]
+        for x in self.data:
+            idx_b = int(slot_num * x.value)
+            arr[idx_b].append(x)
 
 # Main loop
 if __name__ == "__main__":
