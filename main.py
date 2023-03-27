@@ -206,7 +206,6 @@ class App(ctk.CTk):
             if self.data[i].value <= self.data[j].value:
                 temp.append(self.data[i])
                 i += 1
-
             else:
                 temp.append(self.data[j])
                 j += 1
@@ -591,6 +590,8 @@ class App(ctk.CTk):
             self.data[i], self.data[0] = self.data[0], self.data[i]
             self.heapify(i, 0)
             # visualisation
+            for i in range(i):
+                self.data[i].temp_color = YELLOW
             self.visualise()
             time.sleep(time_sleep)
 
