@@ -15,6 +15,25 @@
 </p>
 
 <h2>
+    Implemented algorithms
+</h2>
+<ol>
+    <li>Bubble sort</li>
+    <li>Merge sort</li>
+    <li>Quick sort</li>
+    <li>Insertion sort</li>
+    <li>Shell sort</li>
+    <li>Tim sort</li>
+    <li>Selection sort</li>
+    <li>Pigeonhole sort</li>
+    <li>Coctail sort</li>
+    <li>Comb sort</li>
+    <li>Gnome sort</li>
+    <li>Cycle sort</li>
+    <li>Heap sort</li>
+</ol>
+
+<h2>
     Installation
 </h2>
 <ol>
